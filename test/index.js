@@ -264,6 +264,22 @@ var socket1, socket2, socket3;
         });
       });
 
+      it('sends a custom request ignoring a response', function(done){
+        namespace1.adapter.customHook = function myCustomHook(data, cb){
+          expect(data).to.be('hello');
+          cb(this.uid);
+        }
+
+        var requestCount = Object.keys(namespace3.adapter.requests).length;
+        namespace3.adapter.customRequest('hello', function(err, replies){
+          expect(err).to.be(null);
+          expect(replies).to.be(null);
+          done();
+        }, true);
+        
+        expect(Object.keys(namespace3.adapter.requests).length).to.equal(requestCount);
+      });
+
       it('makes a given socket disconnect', function(done){
         client1.on('disconnect', function(err){
           expect(err).to.be('io server disconnect');
