@@ -67,6 +67,24 @@ function adapter(uri, opts) {
 
   // this server's key
   var uid = uid2(6);
+  
+  var namespaceListeners = {};
+
+  sub.on('pmessageBuffer', function(pattern, channel, message) {
+    var namespace = channel.toString().split('#')[1];
+
+    if (namespaceListeners[namespace] && namespaceListeners[namespace]['pmessageBuffer']) {
+      namespaceListeners[namespace]['pmessageBuffer'](pattern, channel, message);
+    }
+  });
+
+  sub.on('messageBuffer', function(channel, message) {
+    var namespace = channel.toString().split('#')[1];
+
+    if (namespaceListeners[namespace] && namespaceListeners[namespace]['messageBuffer']) {
+      namespaceListeners[namespace]['messageBuffer'](channel, message);
+    }
+  });
 
   /**
    * Adapter constructor.
@@ -97,6 +115,7 @@ function adapter(uri, opts) {
         return messageChannel.substr(0, subscribedChannel.length) === subscribedChannel;
       }
     }
+
     this.pubClient = pub;
     this.subClient = sub;
 
@@ -106,13 +125,14 @@ function adapter(uri, opts) {
       if (err) self.emit('error', err);
     });
 
-    sub.on('pmessageBuffer', this.onmessage.bind(this));
-
     sub.subscribe([this.requestChannel, this.responseChannel], function(err){
       if (err) self.emit('error', err);
     });
 
-    sub.on('messageBuffer', this.onrequest.bind(this));
+    namespaceListeners[this.nsp.name] = {
+      messageBuffer: this.onrequest.bind(this),
+      pmessageBuffer: this.onmessage.bind(this)
+    };
 
     function onError(err) {
       self.emit('error', err);
