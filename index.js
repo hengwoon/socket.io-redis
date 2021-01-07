@@ -67,7 +67,7 @@ function adapter(uri, opts) {
 
   // this server's key
   var uid = uid2(6);
-  
+
   var namespaceListeners = {};
 
   sub.on('pmessageBuffer', function(pattern, channel, message) {
@@ -121,11 +121,7 @@ function adapter(uri, opts) {
 
     var self = this;
 
-    sub.psubscribe(this.channel + '*', function(err){
-      if (err) self.emit('error', err);
-    });
-
-    sub.subscribe([this.requestChannel, this.responseChannel], function(err){
+    sub.subscribe([this.requestChannel], function(err){
       if (err) self.emit('error', err);
     });
 
